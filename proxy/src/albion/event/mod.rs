@@ -4,6 +4,7 @@ pub mod health;
 pub mod leave;
 pub mod faction_currency;
 pub mod silver;
+pub mod building_action;
 
 /// Event decoder and handler registry
 pub mod registry;

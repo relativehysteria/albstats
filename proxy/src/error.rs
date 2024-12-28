@@ -4,7 +4,7 @@ use photon_decode::Value;
 #[derive(Debug, Clone)]
 pub enum DecodeError {
     /// A parameter is missing from the `EventData` parameter map
-    ParameterMissing,
+    ParameterMissing(usize),
 
     /// Got a value that doesn't map to anything expected
     UnexpectedValue(usize),

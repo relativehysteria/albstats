@@ -36,6 +36,7 @@ impl Registry {
         event::health::register(&mut registry);
         event::silver::register(&mut registry);
         event::faction_currency::register(&mut registry);
+        event::building_action::register(&mut registry);
 
         // Return this registry
         registry
@@ -79,7 +80,7 @@ impl Registry {
         // Try to parse the albion event type from this photon message
         let ev_type = match EventType::try_from(data) {
             Ok(ev_type) => ev_type,
-            Err(DecodeError::ParameterMissing) => return Ok(()),
+            Err(DecodeError::ParameterMissing(_)) => return Ok(()),
             Err(e) => return Err(e),
         };
 

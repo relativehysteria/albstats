@@ -6,7 +6,7 @@ use photon_decode::EventData;
 
 /// Decoded faction currency update
 #[derive(Debug)]
-pub struct UpdateCurrency {
+pub struct CurrencyUpdate {
     /// The faction for which this currency has been updated
     faction: CityFaction,
 
@@ -28,14 +28,14 @@ pub struct UpdateCurrency {
 
 /// Decoder for raw photon messages that returns a `Leave` update
 #[derive(Copy, Clone, Debug)]
-pub struct UpdateCurrencyDecoder;
+pub struct CurrencyUpdateDecoder;
 
-impl Decoder for UpdateCurrencyDecoder {
-    type Output = UpdateCurrency;
+impl Decoder for CurrencyUpdateDecoder {
+    type Output = CurrencyUpdate;
 
     fn decode(&self, data: &EventData) -> Result<Self::Output, DecodeError> {
         let p = &data.parameters;
-        Ok(UpdateCurrency {
+        Ok(CurrencyUpdate {
             faction: crate::ph_int!(p, 2, u8)?.try_into()?,
             coins_gained: crate::ph_int!(p, 3, usize)? as f32 / 10_000.,
             coins_total: crate::ph_int!(p, 9, usize)? as f32 / 10_000.,
@@ -46,7 +46,16 @@ impl Decoder for UpdateCurrencyDecoder {
     }
 }
 
+struct Dummy;
+
+impl crate::albion::event::registry::Handler<CurrencyUpdate> for Dummy {
+    fn handle(&self, update: &CurrencyUpdate) {
+        println!("{update:?}");
+    }
+}
+
 /// Registers the faction currency update decoder with the registry
 pub fn register(registry: &mut Registry) {
-    registry.register_decoder(EventType::UpdateCurrency, UpdateCurrencyDecoder);
+    registry.register_decoder(EventType::UpdateCurrency, CurrencyUpdateDecoder);
+    registry.register_handler(EventType::UpdateCurrency, Dummy);
 }

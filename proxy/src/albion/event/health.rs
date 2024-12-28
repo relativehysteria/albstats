@@ -16,8 +16,8 @@ pub struct HealthUpdate {
     /// The delta by which the health has been changed
     pub delta: f64,
 
-    /// New health value of the object
-    pub new_hp: f64,
+    /// New health value of the object. `None` if the object dies/disappears.
+    pub new_hp: Option<f64>,
 
     /// What effect exactly caused the health update
     pub effect_origin: EffectOrigin,
@@ -38,11 +38,12 @@ impl Decoder for HealthDecoder {
 
     fn decode(&self, data: &EventData) -> Result<Self::Output, DecodeError> {
         let p = &data.parameters;
+
         Ok(HealthUpdate {
             dst_id: crate::ph_int!(p, 0, usize)?,
             // 1 is timestamp -- useless
             delta: crate::ph_float!(p, 2, f64)?,
-            new_hp: crate::ph_float!(p, 3, f64)?,
+            new_hp: crate::ph_float!(p, 3, f64).ok(),
             effect_type: crate::ph_int!(p, 4, u8)?.try_into()?,
             effect_origin: crate::ph_int!(p, 5, u8)?.try_into()?,
             src_id: crate::ph_int!(p, 6, usize)?,
@@ -51,7 +52,16 @@ impl Decoder for HealthDecoder {
     }
 }
 
+struct Dummy;
+
+impl crate::albion::event::registry::Handler<HealthUpdate> for Dummy {
+    fn handle(&self, update: &HealthUpdate) {
+        println!("{update:?}");
+    }
+}
+
 /// Registers the health update decoder with the registry
 pub fn register(registry: &mut Registry) {
     registry.register_decoder(EventType::HealthUpdate, HealthDecoder);
+    registry.register_handler(EventType::HealthUpdate, Dummy);
 }

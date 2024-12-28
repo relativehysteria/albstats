@@ -34,7 +34,7 @@ fn main() {
         // Handle the packets
         decoded.iter().for_each(|msg| {
             match registry.handle_msg(msg) {
-                Err(e) => println!("Error while handling message: {e:x?}"),
+                Err(e) => println!("Error while handling message: {e:x?} | {msg:?}"),
                 Ok(_) => (),
             };
         });
