@@ -2,15 +2,19 @@ use std::collections::HashMap;
 use photon_decode::EventData;
 use crate::albion::{DecodeError, EventType};
 
+/// Trait for decoders that take in raw photon `EventData` and return a
+/// decoded object `Output`
 pub trait Decoder {
     type Output: std::fmt::Debug;
     fn decode(&self, data: &EventData) -> Result<Self::Output, DecodeError>;
 }
 
+/// Trait for handlers of decoded objects `T`
 pub trait Handler<T> {
     fn handle(&self, decoded: &T);
 }
 
+/// The registry for various event decoders and their handlers
 pub struct Registry {
     decoders: HashMap<EventType, Box<dyn Fn(&EventData) -> Result<Box<dyn std::any::Any>, DecodeError>>>,
     handlers: HashMap<EventType, Vec<Box<dyn Fn(&dyn std::any::Any)>>>,
@@ -19,6 +23,7 @@ pub struct Registry {
 }
 
 impl Registry {
+    /// Creates a new rempty registry
     pub fn new() -> Self {
         Self {
             decoders: HashMap::new(),
@@ -26,7 +31,7 @@ impl Registry {
         }
     }
 
-    // Register a decoder for a specific EventType
+    /// Registers a decoder for a specific [`EventType`] with this registry
     pub fn register_decoder<D: 'static + Decoder + Send + Sync>(
         &mut self,
         event_type: EventType,
@@ -40,7 +45,7 @@ impl Registry {
         );
     }
 
-    // Register a handler for a specific EventType
+    /// Registers a handler for a specific [`EventType`] with this registry
     pub fn register_handler<T: 'static + Send + Sync>(
         &mut self,
         event_type: EventType,
@@ -56,6 +61,8 @@ impl Registry {
             }));
     }
 
+    /// Processes an event `data` if handlers are registered for its
+    /// [`EventType`]
     pub fn process_event(&self, data: &EventData) -> Result<(), DecodeError> {
         if data.code != 1 { return Ok(()); }
 

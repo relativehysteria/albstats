@@ -2,12 +2,17 @@ use crate::albion::event::registry::{Decoder, Handler, Registry};
 use crate::albion::{EventType, DecodeError};
 use photon_decode::EventData;
 
+/// Decoded chat message
 #[derive(Debug)]
 pub struct ChatMessage {
-    name: String,
-    msg: String,
+    /// Name of the player that sent the message
+    pub name: String,
+
+    /// The message
+    pub msg: String,
 }
 
+/// Decoder for photon messages
 #[derive(Copy, Clone, Debug)]
 pub struct ChatDecoder;
 
@@ -23,6 +28,7 @@ impl Decoder for ChatDecoder{
     }
 }
 
+/// Handler for chat messages
 #[derive(Copy, Clone, Debug)]
 pub struct ChatHandler;
 
@@ -32,6 +38,7 @@ impl Handler<ChatMessage> for ChatHandler {
     }
 }
 
+/// Registers the chat decoder and handlers with the registry
 pub fn register(registry: &mut Registry) {
     // registry.register_decoder(EventType::ChatMessage, ChatDecoder);
     // registry.register_handler(EventType::ChatMessage, ChatHandler);

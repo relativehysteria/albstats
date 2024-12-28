@@ -1,6 +1,7 @@
-/// Albion defined things
-
+/// Event packet types, decoders, handlers
 pub mod event;
+
+/// Operation packet types, decoders, handlers
 pub mod operation;
 
 mod ports;
