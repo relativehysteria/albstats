@@ -1,5 +1,5 @@
-use photon_decode::{EventData, Value};
-use crate::albion::DecodeError;
+use photon_decode::EventData;
+use crate::DecodeError;
 
 /// Types of events sent/received by the Albion client and server
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -606,19 +606,12 @@ pub enum Type {
 	PlayerUsedOutlandsTeleportationPortal = 598,
 }
 
-/// This is the event packet parameter that maps to albion events
-pub const EVENT_PARAM: u8 = 0xFC;
-
 impl TryFrom<usize> for Type {
     type Error = DecodeError;
     fn try_from(value: usize) -> Result<Self, Self::Error> {
-        // Validate the value, cast it and return it
-        assert!(value < core::mem::variant_count::<Self>());
-
-        if value < core::mem::variant_count::<Self>() {
-            Ok(unsafe { core::mem::transmute(value) })
-        } else {
-            Err(DecodeError::UnexpectedValue(value))
+        match value < core::mem::variant_count::<Self>() {
+            true  => Ok(unsafe { core::mem::transmute(value) }),
+            false => Err(DecodeError::UnexpectedValue(value)),
         }
     }
 }
@@ -626,16 +619,7 @@ impl TryFrom<usize> for Type {
 impl TryFrom<&EventData> for Type {
     type Error = DecodeError;
     fn try_from(value: &EventData) -> Result<Self, Self::Error> {
-        let ev_type = match value.parameters.get(&EVENT_PARAM) {
-            Some(ev_type) => ev_type,
-            None => return Err(DecodeError::ParameterMissing),
-        };
-
-        let ev_type = match ev_type {
-            Value::Short(s) => *s as usize,
-            _ => return Err(DecodeError::UnexpectedPhotonType(ev_type.clone())),
-        };
-
-        ev_type.try_into()
+        let p = &value.parameters;
+        crate::ph_int!(p, 0xFC, usize)?.try_into()
     }
 }

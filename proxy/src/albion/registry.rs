@@ -1,5 +1,5 @@
-use crate::albion::{EventRegistry, DecodeError};
-use crate::albion::event::chat;
+use crate::albion::EventRegistry;
+use crate::DecodeError;
 use photon_decode::Message;
 
 /// Registry for packet decoders and their handlers
@@ -10,17 +10,16 @@ pub struct Registry {
 impl Registry {
     /// Creates a new registry with registered decoders and handlers
     pub fn new() -> Self {
-        let mut events = EventRegistry::new();
-        chat::register(&mut events);
+        let events = EventRegistry::new();
         Self { events }
     }
 
     /// Handles a raw photon message packate
     pub fn handle_msg(&self, msg: &Message) -> Result<(), DecodeError> {
         match msg {
-            Message::Event(data)    => self.events.process_event(data),
-            Message::Request(data)  => Ok(()),
-            Message::Response(data) => Ok(()),
+            Message::Event(data)     => self.events.process_event(data),
+            Message::Request(_data)  => Ok(()),
+            Message::Response(_data) => Ok(()),
         }
     }
 }

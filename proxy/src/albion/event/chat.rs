@@ -1,5 +1,6 @@
 use crate::albion::event::registry::{Decoder, Handler, Registry};
-use crate::albion::{EventType, DecodeError};
+use crate::albion::EventType;
+use crate::DecodeError;
 use photon_decode::EventData;
 
 /// Decoded chat message
@@ -12,7 +13,7 @@ pub struct ChatMessage {
     pub msg: String,
 }
 
-/// Decoder for photon messages
+/// Decoder for raw photon messages that returns a [`ChatMessage`]
 #[derive(Copy, Clone, Debug)]
 pub struct ChatDecoder;
 
@@ -22,8 +23,8 @@ impl Decoder for ChatDecoder{
     fn decode(&self, data: &EventData) -> Result<Self::Output, DecodeError> {
         let p = &data.parameters;
         Ok(ChatMessage {
-            name: p.get(&0).ok_or(DecodeError::ParameterMissing)?.to_string(),
-            msg:  p.get(&1).ok_or(DecodeError::ParameterMissing)?.to_string(),
+            name: crate::ph_extract!(p, 0, String)?.clone(),
+            msg:  crate::ph_extract!(p, 1, String)?.clone(),
         })
     }
 }

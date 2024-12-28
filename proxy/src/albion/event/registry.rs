@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use photon_decode::EventData;
-use crate::albion::{DecodeError, EventType};
+use crate::albion::{EventType, event};
+use crate::DecodeError;
 
 /// Trait for decoders that take in raw photon `EventData` and return a
 /// decoded object `Output`
@@ -16,19 +17,29 @@ pub trait Handler<T> {
 
 /// The registry for various event decoders and their handlers
 pub struct Registry {
-    decoders: HashMap<EventType, Box<dyn Fn(&EventData) -> Result<Box<dyn std::any::Any>, DecodeError>>>,
+    decoders: HashMap<EventType, Box<dyn Fn(&EventData) ->
+        Result<Box<dyn std::any::Any>, DecodeError>>>,
     handlers: HashMap<EventType, Vec<Box<dyn Fn(&dyn std::any::Any)>>>,
-    // decoders: HashMap<EventType, Box<dyn Decoder<Output = Box<dyn Any>>>>,
-    // handlers: HashMap<EventType, Vec<Box<dyn Handler<Box<dyna Any>>>>>,
 }
 
 impl Registry {
     /// Creates a new rempty registry
     pub fn new() -> Self {
-        Self {
+        // Create the registry
+        let mut registry = Self {
             decoders: HashMap::new(),
             handlers: HashMap::new(),
-        }
+        };
+
+        // Register the decoders
+        event::chat::register(&mut registry);
+        event::leave::register(&mut registry);
+        event::health::register(&mut registry);
+        event::silver::register(&mut registry);
+        event::faction_currency::register(&mut registry);
+
+        // Return this registry
+        registry
     }
 
     /// Registers a decoder for a specific [`EventType`] with this registry
@@ -72,7 +83,6 @@ impl Registry {
             Err(DecodeError::ParameterMissing) => return Ok(()),
             Err(e) => return Err(e),
         };
-        println!("{ev_type:?}");
 
         // Get the handlers for this event type if any exist. If not, we don't
         // have to waste time decoding it. Bail out.

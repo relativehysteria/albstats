@@ -1,5 +1,10 @@
-/// Chat message decoder and handlers
+#![allow(dead_code)]
+
 pub mod chat;
+pub mod health;
+pub mod leave;
+pub mod faction_currency;
+pub mod silver;
 
 /// Event decoder and handler registry
 pub mod registry;
