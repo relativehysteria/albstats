@@ -32,7 +32,6 @@ impl Registry {
         };
 
         // Register the decoders
-        event::chat::register(&mut registry);
         event::leave::register(&mut registry);
         event::health::register(&mut registry);
         event::silver::register(&mut registry);

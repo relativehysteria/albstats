@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-pub mod chat;
 pub mod health;
 pub mod leave;
 pub mod faction_currency;
