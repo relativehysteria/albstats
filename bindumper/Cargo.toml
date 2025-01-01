@@ -1,0 +1,9 @@
+[package]
+name = "bindumper"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cbc = "0.1"
+flate2 = "1.0"
+des = "0.8"
