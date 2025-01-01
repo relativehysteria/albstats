@@ -37,7 +37,7 @@ pub fn decrypt_bytes(input: &mut [u8]) -> Result<Vec<u8>, DecryptError> {
     let decrypted = cipher.decrypt_padded_mut::<Pkcs7>(input)
         .map_err(|_| DecryptError::PaddingError)?;
 
-    // // Decompress the bytes
+    // Decompress the bytes
     let mut decompressor = GzDecoder::new(decrypted);
     let mut decompressed = Vec::new();
     decompressor.read_to_end(&mut decompressed)
