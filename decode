@@ -1,0 +1,63 @@
+#!/bin/sh
+decoded_dir="./decoded"
+dump_file="dump.cs"
+
+# THIS matches the obfuscated names
+# ([a-z][a-z0-9]{0,2}(\.[a-z][a-z0-9]{0,2})*)
+
+# data that can be parsed from getter functions.
+# this will literally tell us what the classes are called
+cat "$dump_file" \
+    | rg 'public [a-z][a-z0-9]{0,2}(\.[a-z][a-z0-9]{0,2})* get_.*\(.*\) \{ \}' \
+    | rg -v 'public int' \
+    | sed -E 's/.*public ([a-z][a-z0-9]{0,2}(\.[a-z][a-z0-9]{0,2})*) get_([A-Za-z0-9]+)\(.*\) \{ \}/\1 = \3/g' \
+    | sort \
+    | uniq \
+    > "$decoded_dir"/gets
+
+# data that can be parsed from functions that take objects as arguments.
+# this will also tell us what the classes are called
+cat "$dump_file" \
+    | rg '([a-z][a-z0-9]{1,2}(\.[a-z][a-z0-9]{0,2})*) [px]([a-zA-Z])*' \
+    | sed -E 's/.*\((.*)\).*/\1/g' \
+    | sed -e 's/, /\n/g' \
+    | rg '^[a-z][a-z0-9]{1,2}(\.[a-z][a-z0-9]{0,2})* [xp][A-Z]+' \
+    | rg -v "^int" \
+    | rg -v "Other" \
+    | sed -e 's/ / = /g' \
+    | sort \
+    | uniq \
+    > "$decoded_dir"/refs
+
+# classes that implement interfaces and such.
+# can be useful when finding out relations between objects without having to
+# dive into disassembly/decompilation
+cat "$dump_file" \
+    | rg 'public class [a-z][a-z0-9]{0,2}(\.[a-z][a-z0-9]{0,2})* : ' \
+    | sed -E 's/.*public class ([a-z][a-z0-9]{0,2}(\.[a-z][a-z0-9]{0,2})*) : (.*)\/\/.*/\1 > \3/g' \
+    | sort \
+    | uniq \
+    > "$decoded_dir"/ifaces
+
+# various classes that parse the game logic from the .bin files (inside they
+# contain xml, so these classes use xml objects and such). these are useless;
+# it's just an interpreter for the various states in the game. if you want to
+# reverse the game logic, you're trying too much -- just dump the .bin files and
+# read the xml. ;)
+cat "$dump_file" \
+    | rg --multiline 'public class [a-z][a-z0-9]{0,2}(\.[a-z][a-z0-9]{0,2})* .*\n\{\n\s*\/\/ Fields\n\s*public const string [a-z,0-9]{1,2} = "[a-z]*"' \
+    | awk '
+/public class/ {
+    class_name = $3
+}
+/public const string/ {
+    if (class_name != "") {
+        split($0, arr, "\"");
+        print class_name " = " arr[2];
+        class_name = ""
+    }
+}
+' \
+    | sort \
+    | uniq \
+    > "$decoded_dir"/game_logic
